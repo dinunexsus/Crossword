@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id='login-page'>
+        <form id="login-form">
+            <input type="text" placeholder='Name' id='username' required />
+            <input type="email" placeholder='Email' id='email' required />
+            <input type="tel" placeholder='Mobile Number' id='mobile' required />
+            <input type="submit" value='Submit' />
+        </form>
+    </div>
+
+    <!-- <script src="https://unpkg.com/@supabase/supabase-js@2"></script> -->
+
+
+    <script type="module">
+                import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+        // Ensure the Supabase library is loaded before accessing its functions
+        window.addEventListener('load', () => {
+            // Create a client instance using the correct syntax
+            const supabaseUrl = 'https://shitzkupqqdzehswgugn.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaXR6a3VwcXFkemVoc3dndWduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDY3ODY1MjQsImV4cCI6MjAyMjM2MjUyNH0.tyQ3BE-CxIGtOMjqz2KUclayb1hbDKOzpvdZofoufq0';
+            const supabase = createClient(supabaseUrl, supabaseKey);
+
+            const loginForm = document.getElementById('login-form');
+
+            loginForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+
+                const formData = {
+                    username: document.getElementById('username').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    mobile: document.getElementById('mobile').value.trim()
+                };
+
+                if (formData.username === '' || formData.email === '' || formData.mobile === '') {
+                    alert('All inputs are required.');
+                    return;
+                }
+                if (!isValidMobile(formData.mobile)) {
+                    alert('Please enter a valid mobile number.');
+                    return;
+                }
+
+                const { data: existingUser, error: fetchError } = await supabase
+                    .from('logins')
+                    .select()
+                    .eq('email', formData.email)
+                    .single();
+
+                console.log('Existing User:', existingUser);
+                console.log('Fetch Error:', fetchError);
+
+                if (fetchError && fetchError.code !== 'PGRST116') {
+                    console.error('Error fetching user data:', fetchError.message);
+                    return;
+                }
+
+                if (existingUser) {
+                    await supabase
+                        .from('logins')
+                        .update({ logout_status: false })
+                        .eq('email', formData.email);
+                } else {
+                    await supabase.from('logins').insert([
+                        {
+                            username: formData.username,
+                            email: formData.email,
+                            mobile: formData.mobile,
+                            logout_status: false,
+                        }
+                    ]);
+                }
+
+                // Redirect to index.html after successful login
+                window.location.href = 'index.html';
+            });
+
+            function isValidMobile(mobile) {
+                const mobilePattern = /^[0-9]{10}$/;
+                return mobilePattern.test(mobile);
+            }
+        });
+    </script>
+</body>
+</html>

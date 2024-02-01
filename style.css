@@ -1,0 +1,22 @@
+#login-page{
+    width: 400px;
+    margin: 100px auto;
+    background-color: rgb(246, 236, 225);
+    padding: 100px 10px;
+    border: 1px solid black;
+    border-radius: 15px;
+  }
+  #login-page form input{
+    display: block;
+    width: 300px;
+    margin: 15px auto;
+    padding: 15px;
+    border-radius: 10px;
+    border: none;
+  }
+  #login-page form input[type='submit']{
+    width: 150px;
+    background-color: blue;
+    color: white;
+  }
+  

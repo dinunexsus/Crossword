@@ -1,33 +1,19 @@
-
-/**
-* Jesse Weisbeck's Crossword Puzzle (for all 3 people left who want to play them)
-*
-*/
 (function($){
 	$.fn.crossword = function(entryData) {
-			/*
-				Qurossword Puzzle: a javascript + jQuery crossword puzzle
-				"light" refers to a white box - or an input
-
-				DEV NOTES: 
-				- activePosition and activeClueIndex are the primary vars that set the ui whenever there's an interaction
-				- 'Entry' is a puzzler term used to describe the group of letter inputs representing a word solution
-				- This puzzle isn't designed to securely hide answerers. A user can see answerers in the js source
-					- An xhr provision can be added later to hit an endpoint on keyup to check the answerer
-				- The ordering of the array of problems doesn't matter. The position & orientation properties is enough information
-				- Puzzle authors must provide a starting x,y coordinates for each entry
-				- Entry orientation must be provided in lieu of provided ending x,y coordinates (script could be adjust to use ending x,y coords)
-				- Answers are best provided in lower-case, and can NOT have spaces - will add support for that later
-			*/
 			
-			var puzz = {}; // put data array in object literal to namespace it into safety
+		  // Initialize timer and score variables
+		  let startTime, endTime, elapsedTime, score = 0;
+		  let isGameCompleted = false;
+		  let COUNTDOWN_DURATION = 60; // 5 minutes in seconds
+			
+			
+			var puzz = {};
 			puzz.data = entryData;
 			
-			// append clues markup after puzzle wrapper div
-			// This should be moved into a configuration object
+		
 			this.after('<div id="puzzle-clues"><h2>Across</h2><ol id="across"></ol><h2>Down</h2><ol id="down"></ol></div>');
 			
-			// initialize some variables
+		
 			var tbl = ['<table id="puzzle">'],
 			    puzzEl = this,
 				clues = $('#puzzle-clues'),
@@ -51,7 +37,16 @@
 			var puzInit = {
 				
 				init: function() {
+
+					  // Create elements for score and timer
+					  $('#puzzle-clues').after('<div id="score">Score: <span id="score-value">0</span></div>');
+					  $('#puzzle-clues').after('<div id="timer">Timer: <span id="timer-value">0</span> seconds</div>');
+
+				
+
 					currOri = 'across'; // app's init orientation could move to config object
+
+		
 					
 					// Reorder the problems array ascending by POSITION
 					puzz.data.sort(function(a,b) {
@@ -168,17 +163,134 @@
 					// DELETE FOR BG
 					puzInit.buildTable();
 					puzInit.buildEntries();
-										
+					puzInit.startTimer(); // Start timer when puzzle initializes
+				},
+				// startTimer: function () {
+				// 	startTime = new Date();
+				// 	// Update the timer every second
+				// 	setInterval(function () {
+				// 	  if (!isGameCompleted) {
+				// 		  puzInit.updateTimer();
+				// 	  }
+				// 	}, 1000);
+				//   },
+
+				startTimer: function () {
+					COUNTDOWN_DURATION = 60; // Reset the countdown duration to 5 minutes
+					startTime = new Date();
+					endTime = new Date(startTime.getTime() + COUNTDOWN_DURATION * 1000); // Set the end time
+					// Update the timer initially
+					puzInit.updateTimer();
+					// Update the timer every second
+					const timerInterval = setInterval(function () {
+						if (!isGameCompleted && new Date() <= endTime) {
+							puzInit.updateTimer();
+						} else {
+							clearInterval(timerInterval); // Stop the timer if the game is completed or time is up
+							if (!isGameCompleted) {
+								puzInit.endGame(); // End the game if time is up
+							}
+						}
+					}, 1000);
 				},
 				
-				/*
-					- Given beginning coordinates, calculate all coordinates for entries, puts them into entries array
-					- Builds clue markup and puts screen focus on the first one
-				*/
+				
+				//   updateTimer: function () {
+				// 	if (!isGameCompleted) {
+				// 		endTime = new Date();
+				// 		elapsedTime = Math.floor((endTime - startTime) / 1000); // in seconds
+				// 		// Update the timer display (you need to implement this)
+				// 		console.log('Elapsed Time: ' + elapsedTime + ' seconds');
+				// 		$('#timer-value').text(puzInit.formatTime(elapsedTime));
+				// 	}
+				//   },
+
+
+				updateTimer: function () {
+					if (!isGameCompleted) {
+						const now = new Date();
+						const timeDifference = Math.floor((endTime - now) / 1000); // in seconds
+						const minutes = Math.floor(timeDifference / 60);
+						const seconds = timeDifference % 60;
+						const formattedTime = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+						// Update the timer display
+						$('#timer-value').text(formattedTime);
+
+
+						    // Check if all input fields are filled
+							const allInputsFilled = $('#puzzle input').toArray().every(input => input.value.trim() !== '');
+
+						
+						// Check if time is up
+						
+			
+
+						  if (timeDifference <= 0 || allInputsFilled) {
+							  puzInit.endGame(); // End the game if time is up or all entries are filled
+							  clearInterval(timerInterval); // Stop the timer
+
+						  }
+					}
+				},
+				
+				  formatTime: function (timeInSeconds) {
+					  const minutes = Math.floor(timeInSeconds / 60);
+					  const seconds = timeInSeconds % 60;
+					  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+				  },
+
+				   
+											
+				//   endGame: function () {
+				// 	isGameCompleted = true;
+				// 	// Calculate the score based on remaining time
+				// 	const remainingTime = Math.max(Math.floor((endTime - new Date()) / 1000), 0); // Calculate remaining time or 0 if time is already up
+				// 	const timeBonus = remainingTime * 0.1; // 10 points per second remaining
+				// 	score += timeBonus;
+				// 	// Update the score display
+				// 	$('#score-value').text(Math.round(score));
+					
+				// 	let message;
+				// 	if (remainingTime <= 0) {
+				// 		message = "Time's up! Your final score is: " + Math.round(score);
+				// 	} else {
+				// 		message = "Congratulations! You've completed all entries! Your final score is: " + Math.round(score);
+				// 	}
+					
+				// 	// Show score as a popup
+				// 	alert(message);
+				
+				// 	// Clear all entered values in the puzzle box
+				// 	$('#puzzle input').val('');
+				
+				// 	// Optionally, you can reset other game-related variables here if needed
+				// },
+				
+				endGame: function () {
+					isGameCompleted = true;
+					// Calculate the score based on remaining time
+					const remainingTime = Math.max(Math.floor((endTime - new Date()) / 1000), 0); // Calculate remaining time or 0 if time is already up
+					const timeBonus = remainingTime * 0.1; // 10 points per second remaining
+					score += timeBonus;
+					// Update the score display
+					$('#score-value').text(Math.round(score));
+					
+					// Display score as a popup
+					const message = "Your final score is: " + Math.round(score);
+					alert(message);
+				
+					// Clear all entered values in the puzzle box
+					$('#puzzle input').val('');
+				
+					// Optionally, you can reset other game-related variables here if needed
+				},
+				
+				
+				
+				
+			
 				calcCoords: function() {
-					/*
-						Calculate all puzzle entry coordinates, put into entries array
-					*/
+				
 					for (var i = 0, p = entryCount; i < p; ++i) {		
 						// set up array of coordinates for each problem
 						entries.push(i);
@@ -191,6 +303,10 @@
 						}
 
 						// while we're in here, add clues to DOM!
+						console.log(puzz.data);
+						// $('#' + puzz.data[i].orientation).append('<li tabindex="1" data-position="' + i + '">' + puzz.data[i].clue + '</li>'); 
+
+
 						$('#' + puzz.data[i].orientation).append('<li tabindex="1" data-position="' + i + '">' + puzz.data[i].clue + '</li>'); 
 					}				
 					
@@ -207,10 +323,7 @@
 		
 				},
 				
-				/*
-					Build the table markup
-					- adds [data-coords] to each <td> cell
-				*/
+				
 				buildTable: function() {
 					for (var i=1; i <= rows; ++i) {
 						tbl.push("<tr>");
@@ -224,11 +337,7 @@
 					puzzEl.append(tbl.join(''));
 				},
 				
-				/*
-					Builds entries into table
-					- Adds entry class(es) to <td> cells
-					- Adds tabindexes to <inputs> 
-				*/
+			
 				buildEntries: function() {
 					var puzzCells = $('#puzzle td'),
 						light,
@@ -242,9 +351,7 @@
 						for (var i=0; i < entries[x-1].length; ++i) {
 							light = $(puzzCells +'[data-coords="' + entries[x-1][i] + '"]');
 							
-							// check if POSITION property of the entry on current go-round is same as previous. 
-							// If so, it means there's an across & down entry for the position.
-							// Therefore you need to subtract the offset when applying the entry class.
+						
 							if(x > 1 ){
 								if (puzz.data[x-1].position === puzz.data[x-2].position) {
 									hasOffset = true;
@@ -259,6 +366,11 @@
 						};
 						
 					};	
+
+
+			
+
+					
 					
 					// Put entry number in first 'light' of each entry, skipping it if already present
 					for (var i=1, p = entryCount; i < p; ++i) {
@@ -276,51 +388,94 @@
 										
 				},
 				
+				// checkAnswer: function(e) {
+					
+				// 	var valToCheck, currVal;
+					
+				// 	util.getActivePositionFromClassGroup($(e.target));
 				
-				/*
-					- Checks current entry input group value against answer
-					- If not complete, auto-selects next input for user
-				*/
+				// 	valToCheck = puzz.data[activePosition].answer.toLowerCase();
+
+				// 	currVal = $('.position-' + activePosition + ' input')
+				// 		.map(function() {
+				// 	  		return $(this)
+				// 				.val()
+				// 				.toLowerCase();
+				// 		})
+				// 		.get()
+				// 		.join('');
+					
+				// 	//console.log(currVal + " " + valToCheck);
+				// 	if(valToCheck === currVal){	
+				// 		score += 10; // Increment score for correct answer
+				// 		$('#score-value').text(score);
+
+						
+
+				// 		$('.active')
+				// 			.addClass('done')
+				// 			.removeClass('active');
+					
+				// 		$('.clues-active').addClass('clue-done');
+
+				// 		solved.push(valToCheck);
+				// 		solvedToggle = true;
+				// 		return;
+				// 	}
+					
+				// 	currOri === 'across' ? nav.nextPrevNav(e, 39) : nav.nextPrevNav(e, 40);
+
+
+				// }				
+
+
 				checkAnswer: function(e) {
-					
-					var valToCheck, currVal;
-					
-					util.getActivePositionFromClassGroup($(e.target));
-				
-					valToCheck = puzz.data[activePosition].answer.toLowerCase();
+                    
+                    var valToCheck, currVal;
+                    
+                    util.getActivePositionFromClassGroup($(e.target));
+                
+                    valToCheck = puzz.data[activePosition].answer.toLowerCase();
 
-					currVal = $('.position-' + activePosition + ' input')
-						.map(function() {
-					  		return $(this)
-								.val()
-								.toLowerCase();
-						})
-						.get()
-						.join('');
-					
-					//console.log(currVal + " " + valToCheck);
-					if(valToCheck === currVal){	
-						$('.active')
-							.addClass('done')
-							.removeClass('active');
-					
-						$('.clues-active').addClass('clue-done');
+                    currVal = $('.position-' + activePosition + ' input')
+                        .map(function() {
+                            return $(this)
+                                .val()
+                                .toLowerCase();
+                        })
+                        .get()
+                        .join('');
+                    
+                    // Check if the answer is already solved
+                    if (!util.checkSolved(valToCheck)) {
+                        if(valToCheck === currVal){    
+                            score += 10; // Increment score for correct answer
+                            $('#score-value').text(score);
 
-						solved.push(valToCheck);
-						solvedToggle = true;
-						return;
-					}
-					
-					currOri === 'across' ? nav.nextPrevNav(e, 39) : nav.nextPrevNav(e, 40);
-					
-					//z++;
-					//console.log(z);
-					//console.log('checkAnswer() solvedToggle: '+solvedToggle);
+                            $('.active')
+                                .addClass('done')
+                                .removeClass('active');
+                        
+                            $('.clues-active').addClass('clue-done');
 
-				}				
+                            solved.push(valToCheck);
+                            solvedToggle = true;
+
+                            // Check if all answers are solved
+                            if (solved.length === entryCount) {
+                                isGameCompleted = true;
+                            }
+                            return;
+                        }
+                    }
+                    
+                    currOri === 'across' ? nav.nextPrevNav(e, 39) : nav.nextPrevNav(e, 40);
 
 
-			}; // end puzInit object
+                }           
+
+
+			};
 			
 
 			var nav = {
@@ -342,9 +497,6 @@
 					
 					selector = '.position-' + activePosition + ' input';
 					
-					//console.log('nextPrevNav activePosition & struck: '+ activePosition + ' '+struck);
-						
-					// move input focus/select to 'next' input
 					switch(struck) {
 						case 39:
 							p
@@ -410,7 +562,7 @@
 					currOri = $('.clues-active').parent('ol').prop('id');
 										
 					activeClueIndex = $(clueLiEls).index(e.target);
-					//console.log('updateByNav() activeClueIndex: '+activeClueIndex);
+
 					
 				},
 			
@@ -447,9 +599,7 @@
 						
 						util.highlightEntry();
 						util.highlightClue();
-						
-						//$actives.eq(0).addClass('current');	
-						//console.log('nav.updateByEntry() reports activePosition as: '+activePosition);	
+
 				}
 				
 			}; // end nav object
@@ -457,8 +607,7 @@
 			
 			var util = {
 				highlightEntry: function() {
-					// this routine needs to be smarter because it doesn't need to fire every time, only
-					// when activePosition changes
+
 					$actives = $('.active');
 					$actives.removeClass('active');
 					$actives = $('.position-' + activePosition + ' input').addClass('active');
@@ -503,8 +652,6 @@
 							e1Ori = $(clueLiEls + '[data-position=' + classes[0].split('-')[1] + ']').parent().prop('id');
 							e2Ori = $(clueLiEls + '[data-position=' + classes[1].split('-')[1] + ']').parent().prop('id');
 
-							// test if clicked input is first in series. If so, and it intersects with
-							// entry of opposite orientation, switch to select this one instead
 							e1Cell = $('.position-' + classes[0].split('-')[1] + ' input').index(el);
 							e2Cell = $('.position-' + classes[1].split('-')[1] + ' input').index(el);
 
@@ -547,7 +694,6 @@
 
 				
 			puzInit.init();
-	
 							
 	}
 	
