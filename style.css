@@ -1,16 +1,20 @@
+body{
+    background-color: #FDDB4D;
+}
 #login-page{
-    width: 400px;
+    width: 60%;
     margin: 100px auto;
-    background-color: rgb(246, 236, 225);
+    background-color: black;
+    color: white;
     padding: 100px 10px;
-    border: 1px solid black;
+    /* border: 1px solid black; */
     border-radius: 15px;
   }
   #login-page form input{
     display: block;
-    width: 300px;
-    margin: 15px auto;
-    padding: 15px;
+    width: 60%;
+    margin: 25px auto;
+    padding: 20px;
     border-radius: 10px;
     border: none;
   }
