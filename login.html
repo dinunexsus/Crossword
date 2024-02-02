@@ -64,24 +64,27 @@
                 }
 
                 if (existingUser) {
-                    await supabase
-                        .from('logins')
-                        .update({ logout_status: false })
-                        .eq('email', formData.email);
+                    // await supabase
+                    //     .from('logins')
+                    //     .update({ logout_status: false })
+                    //     .eq('email', formData.email);
+
+                    console.log('Existing user found:', existingUser);
+
                 } else {
                     await supabase.from('logins').insert([
                         {
                             username: formData.username,
                             email: formData.email,
                             mobile: formData.mobile,
-                            logout_status: false,
+                            // logout_status: false,
                         }
                     ]);
                 }
 
-                // Redirect to index.html after successful login
-                window.location.href = 'index.html';
-            });
+                 // Redirect to index.html with email query parameter
+            window.location.href = `index.html?email=${encodeURIComponent(formData.email)}`;
+        });
 
             function isValidMobile(mobile) {
                 const mobilePattern = /^[0-9]{10}$/;

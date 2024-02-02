@@ -1,17 +1,57 @@
+
 (function($){
 	$.fn.crossword = function(entryData) {
-			
-		  // Initialize timer and score variables
-		  let startTime, endTime, elapsedTime, score = 0;
-		  let isGameCompleted = false;
-		  let COUNTDOWN_DURATION = 60; // 5 minutes in seconds
-			
+
+		  let score=0;
+		  let userEmail='';
+
+		  console.log(window.supabase);
+
+		
+
 			
 			var puzz = {};
 			puzz.data = entryData;
 			
 		
 			this.after('<div id="puzzle-clues"><h2>Across</h2><ol id="across"></ol><h2>Down</h2><ol id="down"></ol></div>');
+			$('#puzzle-wrapper').append('<button id="submit">End Game</button>');
+
+
+			var
+            currentIndex = 0,
+            correctAnswers = 0,
+            wrongAnswers = 0;
+
+			// Define a function to wait for the Supabase client to be available
+function waitForSupabase() {
+    return new Promise((resolve, reject) => {
+        // Check if window.supabase is available
+        if (window.supabase) {
+            resolve(window.supabase);
+        } else {
+            // If not available, wait for a short interval and check again
+            const interval = setInterval(() => {
+                if (window.supabase) {
+                    clearInterval(interval);
+                    resolve(window.supabase);
+                }
+            }, 100); // Adjust the interval as needed
+        }
+    });
+}
+
+// Call the function and use the returned promise
+waitForSupabase().then(supabase => {
+    // Do something with window.supabase
+    console.log(supabase);
+}).catch(error => {
+    console.error('Error:', error);
+});
+
+       
+
+			
 			
 		
 			var tbl = ['<table id="puzzle">'],
@@ -34,15 +74,40 @@
 				solvedToggle = false,
 				z = 0;
 
+
+			
+
+			
+
 			var puzInit = {
 				
 				init: function() {
 
-					  // Create elements for score and timer
-					  $('#puzzle-clues').after('<div id="score">Score: <span id="score-value">0</span></div>');
-					  $('#puzzle-clues').after('<div id="timer">Timer: <span id="timer-value">0</span> seconds</div>');
+					function getQueryParam(parameterName) {
+						const urlParams = new URLSearchParams(window.location.search);
+						return urlParams.get(parameterName);
+					}
+				
+					$(document).ready(function() {
+						// Get the email from the URL query parameters
+						userEmail = getQueryParam('email');
+				
+						console.log('User Email:', userEmail);
+				
+						// Display the email on the page
+						$('#user-email').text("User Email: " + userEmail);
+					});
+				
+
+					//   $('#puzzle-clues').after('<div id="timer">Timer: <span id="timer-value">0</span> seconds</div>');
+
+					$('#puzzle-clues').after('<div id="score">Score: <span id="score-value">0</span></div>');
+					$('#puzzle-clues').after(`<div id="user-email">User Email: </div>`);
+
 
 				
+					
+
 
 					currOri = 'across'; // app's init orientation could move to config object
 
@@ -152,6 +217,8 @@
 						$(e.target).focus();
 						$(e.target).select();
 					});
+
+				
 					
 					// DELETE FOR BG
 					puzInit.calcCoords();
@@ -163,8 +230,38 @@
 					// DELETE FOR BG
 					puzInit.buildTable();
 					puzInit.buildEntries();
-					puzInit.startTimer(); // Start timer when puzzle initializes
+					// puzInit.startTimer(); // Start timer when puzzle initializes
+
+
+
+
+					// $('#submit').bind('click', async function() {
+					// 	// Push the score to the database
+					// 	await puzInit.sendScoreToDatabase(score);
+						
+					// 	// Navigate to login.html
+					// 	window.location.href = 'login.html';
+					// });
+					$('#submit').bind('click', async function() {
+						// Check if all input fields are filled
+						const allInputsFilled = $('#puzzle input').toArray().every(input => input.value.trim() !== '');
+						if (allInputsFilled) {
+							// Proceed with sending the score and navigating
+							await puzInit.sendScoreToDatabase(score);
+							window.location.href = 'login.html';
+						} else {
+							// Notify the user that all answers must be entered
+							alert('Please fill in all answers before ending the game.');
+						}
+					});
+					
+					
+
+				
 				},
+
+			
+				
 				// startTimer: function () {
 				// 	startTime = new Date();
 				// 	// Update the timer every second
@@ -175,24 +272,24 @@
 				// 	}, 1000);
 				//   },
 
-				startTimer: function () {
-					COUNTDOWN_DURATION = 60; // Reset the countdown duration to 5 minutes
-					startTime = new Date();
-					endTime = new Date(startTime.getTime() + COUNTDOWN_DURATION * 1000); // Set the end time
-					// Update the timer initially
-					puzInit.updateTimer();
-					// Update the timer every second
-					const timerInterval = setInterval(function () {
-						if (!isGameCompleted && new Date() <= endTime) {
-							puzInit.updateTimer();
-						} else {
-							clearInterval(timerInterval); // Stop the timer if the game is completed or time is up
-							if (!isGameCompleted) {
-								puzInit.endGame(); // End the game if time is up
-							}
-						}
-					}, 1000);
-				},
+				// startTimer: function () {
+				// 	COUNTDOWN_DURATION = 60; // Reset the countdown duration to 5 minutes
+				// 	startTime = new Date();
+				// 	endTime = new Date(startTime.getTime() + COUNTDOWN_DURATION * 1000); // Set the end time
+				// 	// Update the timer initially
+				// 	puzInit.updateTimer();
+				// 	// Update the timer every second
+				// 	const timerInterval = setInterval(function () {
+				// 		if (!isGameCompleted && new Date() <= endTime) {
+				// 			puzInit.updateTimer();
+				// 		} else {
+				// 			clearInterval(timerInterval); // Stop the timer if the game is completed or time is up
+				// 			if (!isGameCompleted) {
+				// 				puzInit.endGame(); // End the game if time is up
+				// 			}
+				// 		}
+				// 	}, 1000);
+				// },
 				
 				
 				//   updateTimer: function () {
@@ -206,38 +303,38 @@
 				//   },
 
 
-				updateTimer: function () {
-					if (!isGameCompleted) {
-						const now = new Date();
-						const timeDifference = Math.floor((endTime - now) / 1000); // in seconds
-						const minutes = Math.floor(timeDifference / 60);
-						const seconds = timeDifference % 60;
-						const formattedTime = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-						// Update the timer display
-						$('#timer-value').text(formattedTime);
+				// updateTimer: function () {
+				// 	if (!isGameCompleted) {
+				// 		const now = new Date();
+				// 		const timeDifference = Math.floor((endTime - now) / 1000); // in seconds
+				// 		const minutes = Math.floor(timeDifference / 60);
+				// 		const seconds = timeDifference % 60;
+				// 		const formattedTime = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+				// 		// Update the timer display
+				// 		$('#timer-value').text(formattedTime);
 
 
-						    // Check if all input fields are filled
-							const allInputsFilled = $('#puzzle input').toArray().every(input => input.value.trim() !== '');
+				// 		    // Check if all input fields are filled
+				// 			const allInputsFilled = $('#puzzle input').toArray().every(input => input.value.trim() !== '');
 
 						
-						// Check if time is up
+				// 		// Check if time is up
 						
 			
 
-						  if (timeDifference <= 0 || allInputsFilled) {
-							  puzInit.endGame(); // End the game if time is up or all entries are filled
-							  clearInterval(timerInterval); // Stop the timer
+				// 		  if (timeDifference <= 0 || allInputsFilled) {
+				// 			  puzInit.endGame(); // End the game if time is up or all entries are filled
+				// 			  clearInterval(timerInterval); // Stop the timer
 
-						  }
-					}
-				},
+				// 		  }
+				// 	}
+				// },
 				
-				  formatTime: function (timeInSeconds) {
-					  const minutes = Math.floor(timeInSeconds / 60);
-					  const seconds = timeInSeconds % 60;
-					  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-				  },
+				//   formatTime: function (timeInSeconds) {
+				// 	  const minutes = Math.floor(timeInSeconds / 60);
+				// 	  const seconds = timeInSeconds % 60;
+				// 	  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+				//   },
 
 				   
 											
@@ -266,27 +363,114 @@
 				// 	// Optionally, you can reset other game-related variables here if needed
 				// },
 				
-				endGame: function () {
-					isGameCompleted = true;
-					// Calculate the score based on remaining time
-					const remainingTime = Math.max(Math.floor((endTime - new Date()) / 1000), 0); // Calculate remaining time or 0 if time is already up
-					const timeBonus = remainingTime * 0.1; // 10 points per second remaining
-					score += timeBonus;
-					// Update the score display
-					$('#score-value').text(Math.round(score));
+				// endGame: function () {
+				// 	isGameCompleted = true;
+				// 	// Calculate the score based on remaining time
+				// 	const remainingTime = Math.max(Math.floor((endTime - new Date()) / 1000), 0); // Calculate remaining time or 0 if time is already up
+				// 	const timeBonus = remainingTime * 0.1; // 10 points per second remaining
+				// 	score += timeBonus;
+				// 	// Update the score display
+				// 	$('#score-value').text(Math.round(score));
 					
-					// Display score as a popup
-					const message = "Your final score is: " + Math.round(score);
-					alert(message);
+				// 	// Display score as a popup
+				// 	const message = "Your final score is: " + Math.round(score);
+				// 	alert(message);
 				
-					// Clear all entered values in the puzzle box
-					$('#puzzle input').val('');
+				// 	// Clear all entered values in the puzzle box
+				// 	$('#puzzle input').val('');
 				
-					// Optionally, you can reset other game-related variables here if needed
+				// 	// Optionally, you can reset other game-related variables here if needed
+				// },
+				
+				
+				// displayClue : function(index) {
+				// 	var clue = puzz.data[index];
+				// 	$('#clue-direction').text(clue.orientation.toUpperCase());
+				// 	$('#clue-text').text(clue.clue);
+				// 	if(index === 0) {
+				// 		$('#prev-clue').prop('disabled', true);
+				// 	} else {
+				// 		$('#prev-clue').prop('disabled', false);
+				// 	}
+				// 	if(index === puzz.data.length - 1) {
+				// 		$('#next-clue').hide();
+				// 		$('#submit').show();
+				// 	} else {
+				// 		$('#next-clue').show();
+				// 		$('#submit').hide();
+				// 	}
+				// },
+
+				checkAnswers: function() {
+					puzz.data.forEach(function(entry, index) {
+						var answer = '';
+						for (var i = 0; i < entry.answer.length; i++) {
+							var coords = entry.orientation === 'across' ? (entry.startx + i) + "," + entry.starty : entry.startx + "," + (entry.starty + i);
+							var inputVal = puzzEl.find('td[data-coords="' + coords + '"] input').val();
+							answer += inputVal !== undefined ? inputVal : '';
+						}
+						if(answer.toLowerCase() === entry.answer.toLowerCase()) {
+							correctAnswers++;
+						} else {
+							wrongAnswers++;
+						}
+					}),
+					score = correctAnswers * 10; // For example, 10 points for each correct answer
+					// alert("Correct Answers: " + correctAnswers + "\nWrong Answers: " + wrongAnswers + "\nYour score is: " + score);
+				
+					// Send the score to the Supabase database
+					// sendScoreToDatabase(score);
+				
+					// Navigate back to login.html with the user's email as a parameter
+					// window.location.href = 'login.html'
 				},
+
+				 sendScoreToDatabase: (score) =>{
+					console.log('Score: ', score);
+					if (window.supabase) {
+						window.supabase
+							.from('logins')
+							.update({ score: score })
+							.match({ email: userEmail })
+							.then((response) => {
+								console.log('Score updated successfully:', response);
+								// Navigate to login.html
+								// window.location.href = 'login.html';
+							})
+							.catch((error) => {
+								console.error('Error updating score:', error.message);
+							});
+					} else {
+						console.error('Supabase client not available');
+						// Navigate to login.html even if Supabase client is not available
+						// window.location.href = 'login.html';
+					}
+				},
+		
 				
+
+			
 				
-				
+		
+				//  checkAnswers : function() {
+				// 	puzz.data.forEach(function(entry, index) {
+				// 		var answer = '';
+				// 		for (var i = 0; i < entry.answer.length; i++) {
+				// 			var coords = entry.orientation === 'across' ? (entry.startx + i) + "," + entry.starty : entry.startx + "," + (entry.starty + i);
+				// 			var inputVal = puzzEl.find('td[data-coords="' + coords + '"] input').val();
+				// 			answer += inputVal !== undefined ? inputVal : '';
+				// 		}
+				// 		if(answer.toLowerCase() === entry.answer.toLowerCase()) {
+				// 			correctAnswers++;
+				// 		} else {
+				// 			wrongAnswers++;
+				// 		}
+				// 	});
+				// 	score = correctAnswers * 10; // For example, 10 points for each correct answer
+				// 	alert("Correct Answers: " + correctAnswers + "\nWrong Answers: " + wrongAnswers + "\nYour score is: " + score);
+				// },
+		
+			
 				
 			
 				calcCoords: function() {
@@ -302,13 +486,19 @@
 							entries[i][x] = coords; 
 						}
 
+						console.log(entries);
 						// while we're in here, add clues to DOM!
 						console.log(puzz.data);
-						// $('#' + puzz.data[i].orientation).append('<li tabindex="1" data-position="' + i + '">' + puzz.data[i].clue + '</li>'); 
-
-
 						$('#' + puzz.data[i].orientation).append('<li tabindex="1" data-position="' + i + '">' + puzz.data[i].clue + '</li>'); 
+
+
+					
+
+						
 					}				
+
+
+
 					
 					// Calculate rows/cols by finding max coords of each entry, then picking the highest
 					for (var i = 0, p = entryCount; i < p; ++i) {
@@ -364,29 +554,34 @@
 									.append('<input maxlength="1" val="" type="text" tabindex="-1" />');
 							}
 						};
+
+					
 						
 					};	
 
-
+				
 			
 
 					
 					
 					// Put entry number in first 'light' of each entry, skipping it if already present
-					for (var i=1, p = entryCount; i < p; ++i) {
-						$groupedLights = $('.entry-' + i);
-						if(!$('.entry-' + i +':eq(0) span').length){
-							$groupedLights.eq(0)
-								.append('<span>' + puzz.data[i].position + '</span>');
-						}
-					}	
+					// for (var i=1, p = entryCount; i < p; ++i) {
+					// 	$groupedLights = $('.entry-' + i);
+					// 	if(!$('.entry-' + i +':eq(0) span').length){
+					// 		$groupedLights.eq(0)
+					// 			.append('<span>' + puzz.data[i].position + '</span>');
+					// 	}
+					// }	
 					
 					util.highlightEntry();
 					util.highlightClue();
 					$('.active').eq(0).focus();
 					$('.active').eq(0).select();
 										
+					
 				},
+
+
 				
 				// checkAnswer: function(e) {
 					
@@ -426,7 +621,15 @@
 				// 	currOri === 'across' ? nav.nextPrevNav(e, 39) : nav.nextPrevNav(e, 40);
 
 
-				// }				
+				// }			
+				
+				calculateScoreAndShowAlert: function() {
+					// Calculate the score
+					// For example, let's assume the score is equal to the number of solved entries
+					score = solved.length;
+					// Show the score as an alert
+					alert("Your score is: " + score);
+				},
 
 
 				checkAnswer: function(e) {
@@ -452,6 +655,7 @@
                             score += 10; // Increment score for correct answer
                             $('#score-value').text(score);
 
+							
                             $('.active')
                                 .addClass('done')
                                 .removeClass('active');
@@ -477,6 +681,7 @@
 
 			};
 			
+	
 
 			var nav = {
 				
@@ -691,6 +896,8 @@
 				}
 				
 			}; // end util object
+
+			
 
 				
 			puzInit.init();

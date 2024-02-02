@@ -9,9 +9,9 @@
 	<title>Qurossword - A javascript crossword puzzle plugin</title>
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
-	<script src="js/jquery.crossword.js"></script>
-	<script src="js/script.js"></script>
+	<!-- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> -->
 
+	
 	<style type="text/css" media="screen">
 	/*
 		Default puzzle styling
@@ -64,12 +64,12 @@
 		
 		input.done {
 			font-weight: bold;
-			color: green;
+			/* color: green; */
 		}
 		
 		.active,
 		.clues-active {
-			background-color: #ddd;
+			background-color: #FDDB4D;
 		}
 		.clue-done {
 			color: #999;
@@ -95,14 +95,79 @@
     width: 100px;
     height: 100px;
   }
+  #score{
+	font-size: 1rem;
+	width: 300px;
+	position: fixed;
+	top: 50px;
+	right: 40px;
+  }
+  #user-email{
+	font-size: 1rem;
+	width: 300px;
+	position: fixed;
+	top: 20px;
+	right: 40px;
+  }
+  #puzzle-wrapper{
+	position: relative;
+  }
+  	#submit{
+		display: inline;
+		position: absolute;
+		bottom: -50px;
+		left: 25%;
+		background-color: blue;
+		color: white;
+		padding: 10px;
+		border: none;
+		border-radius: 5px;
+
+	}
 		
 	</style>
 
 </head>
 
+
 <body>
 	
 <div id="puzzle-wrapper"><!-- crossword puzzle appended here --></div>
+
+<script type="module">
+	import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+
+	// Declare supabase variable outside of the event listener
+	let supabase;
+
+// Ensure the Supabase library is loaded before accessing its functions
+window.addEventListener('load', async() => {
+// Create a client instance using the correct syntax
+const supabaseUrl = 'https://shitzkupqqdzehswgugn.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaXR6a3VwcXFkemVoc3dndWduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDY3ODY1MjQsImV4cCI6MjAyMjM2MjUyNH0.tyQ3BE-CxIGtOMjqz2KUclayb1hbDKOzpvdZofoufq0';
+supabase = createClient(supabaseUrl, supabaseKey);
+
+
+
+const { data: existingUser, error: fetchError } = await supabase
+                    .from('logins')
+                    .select()
+                    .eq('email', 'niharikaniha1506@gmail.com')
+                    .single();
+
+	console.log(existingUser);
+
+
+	window.supabase = supabase;
+	console.log(window.supabase);
+
+});
+
+
+</script>
+<script src="js/jquery.crossword.js"></script>
+	<script src="js/script.js"></script>
 
 </body>
 </html>	
