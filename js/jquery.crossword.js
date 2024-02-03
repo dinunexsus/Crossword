@@ -3,7 +3,7 @@
 	$.fn.crossword = function(entryData) {
 
 		  let score=0;
-		  let userEmail='';
+		  let userMobile='';
 
 		  console.log(window.supabase);
 
@@ -49,6 +49,10 @@ waitForSupabase().then(supabase => {
     console.error('Error:', error);
 });
 
+async function sendScoreAndNavigate(score) {
+	await puzInit.sendScoreToDatabase(score);
+	window.location.href = 'login.html';
+}
        
 
 			
@@ -90,19 +94,37 @@ waitForSupabase().then(supabase => {
 				
 					$(document).ready(function() {
 						// Get the email from the URL query parameters
-						userEmail = getQueryParam('email');
+						// userEmail = getQueryParam('email');
 				
-						console.log('User Email:', userEmail);
+						// console.log('User Email:', userEmail);
+				
+						// // Display the email on the page
+						// $('#user-email').text("User Email: " + userEmail);
+
+
+						userMobile = getQueryParam('mobile');
+				
+						console.log('User Mobile:', userMobile);
 				
 						// Display the email on the page
-						$('#user-email').text("User Email: " + userEmail);
+						$('#user-email').text("User Mobile: " + userMobile);
 					});
 				
 
 					//   $('#puzzle-clues').after('<div id="timer">Timer: <span id="timer-value">0</span> seconds</div>');
 
-					$('#puzzle-clues').after('<div id="score">Score: <span id="score-value">0</span></div>');
-					$('#puzzle-clues').after(`<div id="user-email">User Email: </div>`);
+					// $('#puzzle-clues').after('<div id="score">Score: <span id="score-value">0</span></div>');
+					// $('#puzzle-clues').after(`<div id="user-email">Mobile Number: </div>`);
+
+					var userInfoDiv = $('<div id="user-info"></div>');
+					var userMobileDiv = $(`<div id="user-email">Mobile Number: </div>`);
+					var scoreDiv = $('<div id="score">Score: <span id="score-value">0</span></div>');
+
+					userInfoDiv.append(userMobileDiv);
+					userInfoDiv.append(scoreDiv);
+
+					$('#puzzle-clues').after(userInfoDiv);
+
 
 
 				
@@ -242,18 +264,36 @@ waitForSupabase().then(supabase => {
 					// 	// Navigate to login.html
 					// 	window.location.href = 'login.html';
 					// });
+
+
+
+					// $('#submit').bind('click', async function() {
+					// 	// Check if all input fields are filled
+					// 	const allInputsFilled = $('#puzzle input').toArray().every(input => input.value.trim() !== '');
+					// 	if (allInputsFilled) {
+					// 		// Proceed with sending the score and navigating
+					// 		await puzInit.sendScoreToDatabase(score);
+					// 		window.location.href = 'login.html';
+					// 	} else {
+					// 		// Notify the user that all answers must be entered
+					// 		alert('Please fill in all answers before ending the game.');
+					// 	}
+					// });
+					
+
 					$('#submit').bind('click', async function() {
 						// Check if all input fields are filled
 						const allInputsFilled = $('#puzzle input').toArray().every(input => input.value.trim() !== '');
 						if (allInputsFilled) {
 							// Proceed with sending the score and navigating
 							await puzInit.sendScoreToDatabase(score);
-							window.location.href = 'login.html';
 						} else {
 							// Notify the user that all answers must be entered
 							alert('Please fill in all answers before ending the game.');
 						}
 					});
+					
+					
 					
 					
 
@@ -429,11 +469,13 @@ waitForSupabase().then(supabase => {
 					console.log('Score: ', score);
 					if (window.supabase) {
 						window.supabase
-							.from('logins')
+							.from('loginInfo')
 							.update({ score: score })
-							.match({ email: userEmail })
+							.match({ mobile: userMobile })
 							.then((response) => {
 								console.log('Score updated successfully:', response);
+								  // Navigate to login.html
+								  sendScoreAndNavigate(score);
 								// Navigate to login.html
 								// window.location.href = 'login.html';
 							})
@@ -565,8 +607,9 @@ waitForSupabase().then(supabase => {
 					
 					
 					// Put entry number in first 'light' of each entry, skipping it if already present
-					// for (var i=1, p = entryCount; i < p; ++i) {
+					// for (var i=1, p = entryCount; i < p; i++) {
 					// 	$groupedLights = $('.entry-' + i);
+					// 	console.log($groupedLights);
 					// 	if(!$('.entry-' + i +':eq(0) span').length){
 					// 		$groupedLights.eq(0)
 					// 			.append('<span>' + puzz.data[i].position + '</span>');

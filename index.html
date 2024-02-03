@@ -18,7 +18,7 @@
 	*/
 	body {
 		font: 62.5%/1.3em Helvetica, sans-serif;
-		width: 90.3%;
+		width: 90%;
 		margin: 10px auto;
 		background-color: #FDDB4D;
 	}
@@ -78,13 +78,13 @@
 		}
 		
 		#puzzle-wrapper {
-			float: left;
-			width: 54%;
+			/* float: left; */
+			width: 100%;
 			margin-right: 3%;
 		}
 		#puzzle-clues {
-			float: left;
-			width: 12%;
+			/* float: left; */
+			width: 100%;
 		}
 		
 		#puzzle-clues li{
@@ -96,30 +96,7 @@
     width: 100px;
     height: 100px;
   }
-  #score{
-	font-size: 1rem;
-	width: 300px;
-	position: fixed;
-	top: 70px;
-	right: 40px;
-	background-color: black;
-	color: white;
-	padding: 20px 10px;
-	text-align: center;
-	font-size: 1.2rem;
 
-}
-  #user-email{
-	font-size: 1rem;
-	width: 300px;
-	position: fixed;
-	top: 20px;
-	right: 40px;
-	background-color: black;
-	color: white;
-	padding: 20px 10px;
-
-  }
   #puzzle-wrapper{
 	position: relative;
   }
@@ -135,15 +112,57 @@
 		border-radius: 5px;
 
 	}
-		
+	#main{
+		display: flex;
+		flex-direction: row;
+		justify-content: space-evenly;
+		align-items: first baseline;
+		gap: 30px;
+	}
+
+	#user-info{
+		background-color: #333;
+		color: white;
+		font-size: 1rem;
+		padding: 20px;
+		border-radius: 10px;
+		margin: 20px 0;
+		width: 50%;
+	}
+	#user-info div{
+		margin-top: 10px;
+	}
+	@media screen and (max-width: 1000px) {
+    #main {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #puzzle-wrapper {
+        width: 90%;
+        margin-right: 0;
+    }
+
+    #puzzle-clues {
+        width: 90%;
+        margin-top: 20px;
+    }
+
+    #user-info {
+        margin: 20px auto;
+        width: 90%;
+    }
+}
 	</style>
 
 </head>
 
 
 <body>
-	
-<div id="puzzle-wrapper"><!-- crossword puzzle appended here --></div>
+	<div id="main">
+		<div id="puzzle-wrapper"><!-- crossword puzzle appended here --></div>
+
+	</div>
 
 <script type="module">
 	import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -159,15 +178,6 @@ const supabaseUrl = 'https://shitzkupqqdzehswgugn.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaXR6a3VwcXFkemVoc3dndWduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDY3ODY1MjQsImV4cCI6MjAyMjM2MjUyNH0.tyQ3BE-CxIGtOMjqz2KUclayb1hbDKOzpvdZofoufq0';
 supabase = createClient(supabaseUrl, supabaseKey);
 
-
-
-const { data: existingUser, error: fetchError } = await supabase
-                    .from('logins')
-                    .select()
-                    .eq('email', 'niharikaniha1506@gmail.com')
-                    .single();
-
-	console.log(existingUser);
 
 
 	window.supabase = supabase;

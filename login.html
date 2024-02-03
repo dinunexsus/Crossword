@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,22 +11,16 @@
 <body>
     <div id='login-page'>
         <form id="login-form">
-            <input type="text" placeholder='Name' id='username' required />
-            <input type="email" placeholder='Email' id='email' required />
+            
             <input type="tel" placeholder='Mobile Number' id='mobile' required />
             <input type="submit" value='Submit' />
         </form>
     </div>
 
-    <!-- <script src="https://unpkg.com/@supabase/supabase-js@2"></script> -->
-
-
     <script type="module">
-                import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-        // Ensure the Supabase library is loaded before accessing its functions
         window.addEventListener('load', () => {
-            // Create a client instance using the correct syntax
             const supabaseUrl = 'https://shitzkupqqdzehswgugn.supabase.co';
             const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaXR6a3VwcXFkemVoc3dndWduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDY3ODY1MjQsImV4cCI6MjAyMjM2MjUyNH0.tyQ3BE-CxIGtOMjqz2KUclayb1hbDKOzpvdZofoufq0';
             const supabase = createClient(supabaseUrl, supabaseKey);
@@ -35,12 +31,11 @@
                 event.preventDefault();
 
                 const formData = {
-                    username: document.getElementById('username').value.trim(),
-                    email: document.getElementById('email').value.trim(),
+               
                     mobile: document.getElementById('mobile').value.trim()
                 };
 
-                if (formData.username === '' || formData.email === '' || formData.mobile === '') {
+                if (formData.mobile === '') {
                     alert('All inputs are required.');
                     return;
                 }
@@ -49,42 +44,36 @@
                     return;
                 }
 
-                const { data: existingUser, error: fetchError } = await supabase
-                    .from('logins')
+               
+
+                const { data: existingUserByMobile, error: fetchErrorByMobile } = await supabase
+                    .from('loginInfo')
                     .select()
-                    .eq('email', formData.email)
+                    .eq('mobile', formData.mobile)
                     .single();
 
-                console.log('Existing User:', existingUser);
-                console.log('Fetch Error:', fetchError);
-
-                if (fetchError && fetchError.code !== 'PGRST116') {
-                    console.error('Error fetching user data:', fetchError.message);
+                if (
+                    (fetchErrorByMobile && fetchErrorByMobile.code !== 'PGRST116')) {
+                    console.error('Error fetching user data:',  fetchErrorByMobile.message);
                     return;
                 }
 
-                if (existingUser) {
-                    // await supabase
-                    //     .from('logins')
-                    //     .update({ logout_status: false })
-                    //     .eq('email', formData.email);
-
-                    console.log('Existing user found:', existingUser);
-
-                } else {
-                    await supabase.from('logins').insert([
+                if(existingUserByMobile){
+                    alert("Already submitted")
+                }
+                
+                 else {
+                    // If no user with the provided email or mobile number exists, insert a new entry
+                    await supabase.from('loginInfo').insert([
                         {
-                            username: formData.username,
-                            email: formData.email,
-                            mobile: formData.mobile,
-                            // logout_status: false,
+                          
+                            mobile: formData.mobile
                         }
                     ]);
+                    // Redirect to index.html with email query parameter
+                    window.location.href = `index.html?mobile=${encodeURIComponent(formData.mobile)}`;
                 }
-
-                 // Redirect to index.html with email query parameter
-            window.location.href = `index.html?email=${encodeURIComponent(formData.email)}`;
-        });
+            });
 
             function isValidMobile(mobile) {
                 const mobilePattern = /^[0-9]{10}$/;
@@ -93,4 +82,4 @@
         });
     </script>
 </body>
-</html>
+</html> 
