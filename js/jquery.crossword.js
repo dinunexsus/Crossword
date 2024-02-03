@@ -607,19 +607,25 @@ async function sendScoreAndNavigate(score) {
 					
 					
 					// Put entry number in first 'light' of each entry, skipping it if already present
-					// for (var i=1, p = entryCount; i < p; i++) {
-					// 	$groupedLights = $('.entry-' + i);
-					// 	console.log($groupedLights);
-					// 	if(!$('.entry-' + i +':eq(0) span').length){
-					// 		$groupedLights.eq(0)
-					// 			.append('<span>' + puzz.data[i].position + '</span>');
-					// 	}
-					// }	
+					for (var i=0, p = entryCount; i < p; ++i) {
+						$groupedLights = $('.entry-' + (i+1));
+						console.log($groupedLights);
+						if(!$('.entry-' + (i+1) +':eq(0) span').length){
+							$groupedLights.eq(0)
+								.append('<span>' + puzz.data[i].position + '</span>');
+								console.log(puzz.data[i].position);
+						}
+					}	
 					
 					util.highlightEntry();
 					util.highlightClue();
 					$('.active').eq(0).focus();
 					$('.active').eq(0).select();
+
+
+			
+
+
 										
 					
 				},
